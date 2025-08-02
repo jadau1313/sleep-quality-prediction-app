@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Prediction Result</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div style="text-align:center; margin-top:2rem;">
+        <h2>Your Predicted Sleep Quality:</h2>
+        <p style="font-size: 2rem; color: #2b6cb0;">{{ prediction }}</p>
+        <a href="/" class="button">Try Again</a>
+    </div>
+</body>
+</html>

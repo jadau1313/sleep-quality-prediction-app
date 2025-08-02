@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Filter Data</title>
+</head>
+<body>
+    <h2>Filter Sleep Dataset</h2>
+
+    <form method="POST">
+        <label for="occupation">Occupation:</label>
+        <select name="occupation">
+            <option>All</option>
+            {% for occ in occupations %}
+                <option value="{{ occ }}">{{ occ }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="stress">Stress Level:</label>
+        <select name="stress">
+            <option>All</option>
+            {% for s in stress_levels %}
+                <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="sleep_min">Min Sleep Duration:</label>
+        <input type="number" step="0.1" name="sleep_min" value="4.0">
+
+        <label for="sleep_max">Max Sleep Duration:</label>
+        <input type="number" step="0.1" name="sleep_max" value="10.0">
+
+        <button type="submit">Apply Filters</button>
+    </form>
+
+    <h3>Metrics for Selected Filters</h3>
+    <p>Average Sleep Quality: {{ avg_quality }}</p>
+    <p>Average Heart Rate: {{ avg_hr }}</p>
+    <p>Average Daily Steps: {{ avg_steps }}</p>
+
+    <h3>Sleep Quality Distribution</h3>
+    {% if plot_img %}
+        <img src="data:image/png;base64,{{ plot_img }}" alt="Histogram">
+    {% endif %}
+
+    <br><a href="/">Back to Home</a>
+</body>
+</html>

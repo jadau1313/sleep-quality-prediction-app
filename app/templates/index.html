@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SuperUltraMedDevices Sleep Health</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 2rem;
+            background-color: #f0f4f8;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2b6cb0;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #4a5568;
+            margin-bottom: 2rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .button {
+            padding: 10px 20px;
+            background-color: #2b6cb0;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #2c5282;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="logo">SuperUltraMedDevices</div>
+    <div class="subtitle">Sleep Health Analysis & Quality Prediction</div>
+
+    <p>Welcome! This tool uses lifestyle and biometric factors to analyze and predict your sleep quality.</p>
+
+    <div class="nav-buttons">
+        <a href="/predict" class="button">Predict Sleep Quality</a>
+        <a href="/dashboard" class="button">View Data Dashboard</a>
+        <a href="/filters" class="button">Run Interactive Queries</a>
+    </div>
+</body>
+</html>

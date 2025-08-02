@@ -1,0 +1,25 @@
+# Byte-compiled / virtual environment
+__pycache__/
+*.py[cod]
+*.pkl
+*.joblib
+*.sqlite3
+venv/
+.venv/
+
+# OS files
+.DS_Store
+
+# IDE configs
+*.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Heroku/Python build artifacts
+*.egg-info/
+*.pyc
+
+# Env files
+.env

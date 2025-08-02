@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Predict Sleep Quality</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        form {
+            max-width: 600px;
+            margin: 2rem auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input, select {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .submit-button {
+            background-color: #2b6cb0;
+            color: white;
+            padding: 0.75rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .submit-button:hover {
+            background-color: #2c5282;
+        }
+    </style>
+</head>
+<body>
+    <h2 style="text-align:center;">Predict Your Sleep Quality</h2>
+    <form action="/predict" method="POST">
+        <label>Gender:</label>
+        <select name="gender">
+            <option value="0">Female</option>
+            <option value="1">Male</option>
+        </select>
+
+        <label>Age:</label>
+        <input type="number" name="age" required>
+
+        <label>Occupation:</label>
+        <select name="occupation">
+            <option value="0">Accountant</option>
+            <option value="1">Doctor</option>
+            <option value="2">Engineer</option>
+            <option value="3">Lawyer</option>
+            <option value="4">Manager</option>
+            <option value="5">Nurse</option>
+            <option value="6">Sales Representative</option>
+            <option value="7">Salesperson</option>
+            <option value="8">Scientist</option>
+            <option value="9">Software Engineer</option>
+            <option value="10">Teacher</option>
+        </select>
+
+        <label>Sleep Duration (hours):</label>
+        <input type="number" step="0.1" name="sleep_duration" required>
+
+        <label>Physical Activity Level (mins/day):</label>
+        <input type="number" name="physical_activity" required>
+
+        <label>Stress Level (1-10):</label>
+        <input type="number" name="stress_level" min="1" max="10" required>
+
+        <label>BMI Category:</label>
+        <select name="bmi_category">
+            <option value="0">Normal</option>
+            <option value="1">Underweight</option> <!--dataset category name was mislabeled Normal weight instead of underweight, which I correct here for the user
+             facing portion of the application
+             -->
+            <option value="2">Obese</option>
+            <option value="3">Overweight</option>
+        </select>
+
+        <label>Heart Rate (bpm):</label>
+        <input type="number" name="heart_rate" required>
+
+        <label>Daily Steps:</label>
+        <input type="number" name="daily_steps" required>
+
+        <label>Sleep Disorder:</label>
+        <select name="sleep_disorder">
+            <option value="0">Insomnia</option>
+            <option value="1">Sleep Apnea</option>
+            <option value="2">None</option>
+        </select>
+
+        <label>Systolic Blood Pressure:</label>
+        <input type="number" name="systolic_bp" required>
+
+        <label>Diastolic Blood Pressure:</label>
+        <input type="number" name="diastolic_bp" required>
+
+        <button type="submit" class="submit-button">Predict</button>
+    </form>
+</body>
+</html>
