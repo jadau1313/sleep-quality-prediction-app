@@ -9,9 +9,11 @@
     <form method="POST">
         <label for="occupation">Occupation:</label>
         <select name="occupation">
-            <option>All</option>
-            {% for occ in occupations %}
-                <option value="{{ occ }}">{{ occ }}</option>
+            <option value="All">All</option>
+            {% for code, label in occupations %}
+                <option value="{{ code }}" {% if request.form.get('occupation') == code|string %}selected{% endif %}>
+                    {{ label }}
+                </option>
             {% endfor %}
         </select>
 

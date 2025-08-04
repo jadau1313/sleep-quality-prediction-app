@@ -8,6 +8,10 @@ import matplotlib.pyplot as plt
 import io
 import base64
 import warnings
+from groq import Groq
+from sklearn.metrics import classification_report, accuracy_score
+import markdown
+import logging
 warnings.filterwarnings("ignore", category=UserWarning)
 
 app = Flask(__name__)
@@ -15,6 +19,12 @@ app = Flask(__name__)
 df = pd.read_csv('data/cleaned_sleep_data.csv')
 
 model = joblib.load('models/xgboost_sleep_model.pkl')
+
+logging.basicConfig(
+    filename='logs/api_calls.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 @app.route('/')
 def index():
@@ -28,25 +38,71 @@ def show_prediction_form():
 @app.route('/predict', methods=['POST'])
 def predict():
     try:
+        form = request.form
+
         user_input = [
-            int(request.form['gender']),
-            int(request.form['age']),
-            int(request.form['occupation']),
-            float(request.form['sleep_duration']),
-            int(request.form['physical_activity']),
-            int(request.form['stress_level']),
-            int(request.form['bmi_category']),
-            int(request.form['heart_rate']),
-            int(request.form['daily_steps']),
-            int(request.form['sleep_disorder']),
-            int(request.form['systolic_bp']),
-            int(request.form['diastolic_bp'])
+            int(form['gender']),
+            int(form['age']),
+            int(form['occupation']),
+            float(form['sleep_duration']),
+            int(form['physical_activity']),
+            int(form['stress_level']),
+            int(form['bmi_category']),
+            int(form['heart_rate']),
+            int(form['daily_steps']),
+            int(form['sleep_disorder']),
+            int(form['systolic_bp']),
+            int(form['diastolic_bp'])
         ]
 
-        prediction = model.predict([user_input])[0] + 4  # shift from 0–5 back to 4–9 range
-        return render_template('result.html', prediction=prediction)
+        prediction = model.predict([user_input])[0] + 4  # score from 4–9
+
+        # Build a dictionary for Groq feedback
+        occupation_map = {
+            0: "Accountant", 1: "Doctor", 2: "Engineer", 3: "Lawyer",
+            4: "Manager", 5: "Nurse", 6: "Sales Representative", 7: "Salesperson",
+            8: "Scientist", 9: "Software Engineer", 10: "Teacher"
+        }
+
+        bmi_map = {
+            0: "Normal", 1: "Underweight", 2: "Obese", 3: "Overweight"
+        }
+
+        disorder_map = {
+            0: "Insomnia", 1: "Sleep Apnea", 2: "None"
+        }
+
+        user_input_dict = {
+            "Age": int(form['age']),
+            "Gender": int(form['gender']),
+            "Occupation": occupation_map.get(int(form['occupation']), "Unknown"),
+            "Sleep Duration": float(form['sleep_duration']),
+            "Physical Activity Level": int(form['physical_activity']),
+            "Stress Level": int(form['stress_level']),
+            "BMI Category": bmi_map.get(int(form['bmi_category']), "Unknown"),
+            "Heart Rate": int(form['heart_rate']),
+            "Daily Steps": int(form['daily_steps']),
+            "Sleep Disorder": disorder_map.get(int(form['sleep_disorder']), "Unknown"),
+            "Blood Pressure": f"{form['systolic_bp']}/{form['diastolic_bp']}"
+        }
+
+        # Get feedback (LLM or fallback)
+        ai_feedback = sleep_doc_groq_feedback(user_input_dict, prediction)
+        if not ai_feedback:
+            ai_feedback = get_default_feedback(prediction)
+            logging.warning("Fallback message generated.")
+        else:
+            logging.info("SleepDocGroq feedback generated successfully.")
+
+        logging.info(f"Prediction successful. Score: {prediction}.")
+        #if ai_feedback is None:
+        #   ai_feedback = get_default_feedback(prediction)
+
+        return render_template('result.html', prediction=prediction, ai_feedback=ai_feedback)
+
     except Exception as e:
         return f"Error: {e}"
+
 
 @app.route('/dashboard')
 def dashboard():
@@ -77,8 +133,22 @@ def dashboard():
 
 @app.route('/filters', methods=['GET', 'POST'])
 def filters():
+    occupation_map = {
+        0: "Accountant",
+        1: "Doctor",
+        2: "Engineer",
+        3: "Lawyer",
+        4: "Manager",
+        5: "Nurse",
+        6: "Sales Representative",
+        7: "Salesperson",
+        8: "Scientist",
+        9: "Software Engineer",
+        10: "Teacher"
+    }
+
     filtered_df = df.copy()
-    occupations = sorted(df['Occupation'].unique())
+    occupations = sorted([(key, val) for key, val in occupation_map.items()], key=lambda x: x[1])
     stress_levels = sorted(df['Stress Level'].unique())
 
     selected_occupation = request.form.get('occupation')
@@ -133,5 +203,95 @@ def plot_to_img(fig):
     return encoded
 
 
+def sleep_doc_groq_feedback(user_input, sleep_quality_score):
+    prompt = f"""
+    A user has received a sleep quality score of {sleep_quality_score:.1f}/10.
+
+    Their info:
+    - Age: {user_input['Age']}
+    - Gender: {"Male" if user_input['Gender'] == 1 else "Female"}
+    - Occupation: {user_input['Occupation']}
+    - Sleep Duration: {user_input['Sleep Duration']} hours
+    - Physical Activity Level: {user_input['Physical Activity Level']} min/day
+    - Stress Level: {user_input['Stress Level']}/10
+    - BMI Category: {user_input['BMI Category']}
+    - Blood Pressure: {user_input['Blood Pressure']}
+    - Heart Rate: {user_input['Heart Rate']} bpm
+    - Daily Steps: {user_input['Daily Steps']}
+    - Sleep Disorder: {user_input['Sleep Disorder']}
+
+    Give the user a personalized and friendly message based on these inputs.
+    Suggest 2–3 simple and relevant changes they can try, and offer support or encouragement.
+    The tone should be friendly and not alarming, but still based on modern sleep medicine.
+    The message should be brief and not overly wordy. The message should not include a signature handle of any kind. 
+    """
+
+    messages = [
+        {
+            "role": "system",
+            "content": "You are a compassionate AI born sleep coach and clinician called SleepDocGroq who is helping users optimize their sleep habits with encouragement and medically accurate insights."
+        },
+        {
+            "role": "user",
+            "content": prompt
+        }
+    ]
+
+    # Use your live Groq key — we'll keep it here, unhidden as you requested.
+    api_key = "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"
+    client = Groq(api_key=api_key)
+
+    try:
+        response = client.chat.completions.create(
+            model="llama3-70b-8192",
+            messages=messages,
+            temperature=1.0,
+            max_tokens=1000
+        )
+        return markdown.markdown(response.choices[0].message.content)
+    except Exception as e:
+        return None  # fallback logic will kick in
+
+def get_default_feedback(score):
+    if score >= 8:
+        print("Awesome! Your sleep quality looks excellent. Keep maintaining your healthy habits!")
+        return "Awesome! Your sleep quality looks excellent. Keep maintaining your healthy habits!"
+    elif score >= 6:
+        print("Not bad! There's room for improvement. Try being consistent with your bedtime and avoid screens before bed.")
+        return "Not bad! There's room for improvement. Try being consistent with your bedtime and avoid screens before bed."
+    elif score >= 4:
+        print("Your sleep quality could use a boost. Watch out for stress, and make time to unwind before bed.")
+        return "Your sleep quality could use a boost. Watch out for stress, and make time to unwind before bed."
+    else:
+        print("Your sleep score is low. It might help to reduce stimulants, improve your sleep routine, or consult a sleep specialist.")
+        return "Your sleep score is low. It might help to reduce stimulants, improve your sleep routine, or consult a sleep specialist."
+
+
+
+##run this in cli to get accuracy scores
+#python -c "from app import evaluate_model; evaluate_model()"
+def evaluate_model():
+
+    # Define features and label
+    features = [
+        'Gender', 'Age', 'Occupation', 'Sleep Duration', 'Physical Activity Level',
+        'Stress Level', 'BMI Category', 'Heart Rate', 'Daily Steps',
+        'Sleep Disorder', 'Systolic BP', 'Diastolic BP'
+    ]
+    label = 'Quality of Sleep'
+
+    x = df[features]
+    y = df[label] - 4  # reverse shift if needed (model was trained on 0–5)
+
+
+    # Predict
+    y_pred = model.predict(x)
+
+    # Report
+    print("Accuracy:", accuracy_score(y, y_pred))
+    print(classification_report(y, y_pred))
+
+
 if __name__ == '__main__':
     app.run(debug=True)
+    #app.run()
