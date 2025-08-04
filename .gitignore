@@ -1,8 +1,7 @@
 # Byte-compiled / virtual environment
 __pycache__/
 *.py[cod]
-*.pkl
-*.joblib
+
 *.sqlite3
 venv/
 .venv/
