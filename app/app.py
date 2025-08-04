@@ -29,7 +29,10 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
-df = pd.read_csv('data/cleaned_sleep_data.csv')
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CSV_PATH = os.path.join(BASE_DIR, '.', 'data', 'cleaned_sleep_data.csv')
+df = pd.read_csv(CSV_PATH)
+#df = pd.read_csv('data/cleaned_sleep_data.csv')
 
 model = joblib.load('models/xgboost_sleep_model.pkl')
 
