@@ -32,6 +32,7 @@ with app.app_context():
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE_DIR, '.', 'data', 'cleaned_sleep_data.csv')
 MODEL_PATH = os.path.join(BASE_DIR, '.', 'models', 'lgbm_sleep_model.pkl')
+LOG_FILE_PATH = os.path.join(BASE_DIR, '.', 'logs', 'api_calls.log')
 df = pd.read_csv(CSV_PATH)
 model = joblib.load(MODEL_PATH)
 #df = pd.read_csv('data/cleaned_sleep_data.csv')
@@ -41,7 +42,7 @@ model = joblib.load(MODEL_PATH)
 logger = logging.getLogger('api_logger')
 logger.setLevel(logging.INFO)
 
-file_handler = logging.FileHandler('logs/api_calls.log')
+file_handler = logging.FileHandler(LOG_FILE_PATH)
 file_handler.setLevel(logging.INFO)
 
 console_handler = logging.StreamHandler()
