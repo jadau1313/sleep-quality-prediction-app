@@ -3,7 +3,7 @@ import numpy as np
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
-model = joblib.load('app/models/xgboost_sleep_model.pkl')
+model = joblib.load('app/models/lgbm_sleep_model.pkl')
 
 test_input = np.array([[1, 27, 9, 6.1, 42, 6, 3, 77, 4200, 2, 126, 83]])
 

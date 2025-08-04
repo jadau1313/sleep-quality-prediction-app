@@ -31,7 +31,7 @@ with app.app_context():
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE_DIR, '.', 'data', 'cleaned_sleep_data.csv')
-MODEL_PATH = os.path.join(BASE_DIR, '.', 'models', 'xgboost_sleep_model.pkl')
+MODEL_PATH = os.path.join(BASE_DIR, '.', 'models', 'lgbm_sleep_model.pkl')
 df = pd.read_csv(CSV_PATH)
 model = joblib.load(MODEL_PATH)
 #df = pd.read_csv('data/cleaned_sleep_data.csv')
