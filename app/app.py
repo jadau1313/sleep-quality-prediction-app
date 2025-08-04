@@ -1,6 +1,10 @@
 # app.py
 from flask import Flask, render_template, request
 import joblib
+##from db_model import db, APILog
+##from config import Config
+from app.db_model import db, APILog
+from app.config import Config
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -13,18 +17,41 @@ from sklearn.metrics import classification_report, accuracy_score
 import markdown
 import logging
 warnings.filterwarnings("ignore", category=UserWarning)
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+
 
 app = Flask(__name__)
+app.config.from_object(Config)
+db.init_app(app)
+
+with app.app_context():
+    db.create_all()
 
 df = pd.read_csv('data/cleaned_sleep_data.csv')
 
 model = joblib.load('models/xgboost_sleep_model.pkl')
 
-logging.basicConfig(
-    filename='logs/api_calls.log',
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+logger = logging.getLogger('api_logger')
+logger.setLevel(logging.INFO)
+
+file_handler = logging.FileHandler('logs/api_calls.log')
+file_handler.setLevel(logging.INFO)
+
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+if not logger.handlers:
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+app.logger.addHandler(console_handler)
+
+app.logger.setLevel(logging.INFO)
 
 @app.route('/')
 def index():
@@ -90,17 +117,34 @@ def predict():
         ai_feedback = sleep_doc_groq_feedback(user_input_dict, prediction)
         if not ai_feedback:
             ai_feedback = get_default_feedback(prediction)
-            logging.warning("Fallback message generated.")
+            logger.warning("Fallback message generated.")
         else:
-            logging.info("SleepDocGroq feedback generated successfully.")
+            logger.info("SleepDocGroq feedback generated successfully.")
 
-        logging.info(f"Prediction successful. Score: {prediction}.")
+        logger.info(f"Prediction successful. Score: {prediction}.")
         #if ai_feedback is None:
         #   ai_feedback = get_default_feedback(prediction)
+        log_entry = APILog(
+            success=True,
+            user_input=str(user_input_dict),
+            prediction=prediction,
+            feedback=ai_feedback
+        )
+        db.session.add(log_entry)
+        db.session.commit()
 
         return render_template('result.html', prediction=prediction, ai_feedback=ai_feedback)
 
     except Exception as e:
+        logger.error(f"Predition failed: {e}")
+        error_log = APILog(
+            success=False,
+            user_input=str(request.form),
+            prediction=None,
+            feedback=str(e)
+        )
+        db.session.add(error_log)
+        db.session.commit()
         return f"Error: {e}"
 
 
@@ -293,5 +337,16 @@ def evaluate_model():
 
 
 if __name__ == '__main__':
+    #print("WARNING: This is a development server. Do not use it in a production deployment."
+    #    " Use a production WSGI server instead.Running on http://127.0.0.1:5000"
+    #    " 33mPress CTRL+C to quit. * Debugger PIN: 101-256-703")
     app.run(debug=True)
     #app.run()
+
+@app.cli.command('show-logs')
+def show_logs():
+    logs = APILog.query.order_by(APILog.timestamp.desc()).all()
+    for log in logs:
+        print(f"{log.timestamp} | Success: {log.success} | Prediction: {log.prediction}")
+        print(f"Input: {log.user_input}")
+        print(f"Feedback: {log.feedback[:100]}...\n")
