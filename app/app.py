@@ -14,14 +14,11 @@ import markdown
 warnings.filterwarnings("ignore", category=UserWarning)
 import sys
 import os
-from dotenv import load_dotenv
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-#load_dotenv()
-GROQ_CLIENT = Groq(api_key=os.getenv("GROQ_KEY"))
 
 
 app = Flask(__name__)
-
+GROQ_CLIENT = Groq(api_key=os.getenv("GROQ_KEY"))
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE_DIR, '.', 'data', 'cleaned_sleep_data.csv')
 MODEL_PATH = os.path.join(BASE_DIR, '.', 'models', 'lgbm_sleep_model.pkl')
