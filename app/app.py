@@ -16,7 +16,7 @@ import sys
 import os
 from dotenv import load_dotenv
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-load_dotenv()
+#load_dotenv()
 GROQ_CLIENT = Groq(api_key=os.getenv("GROQ_KEY"))
 
 
