@@ -14,7 +14,10 @@ import markdown
 warnings.filterwarnings("ignore", category=UserWarning)
 import sys
 import os
+from dotenv import load_dotenv
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+load_dotenv()
+GROQ_CLIENT = Groq(api_key=os.getenv("GROQ_KEY"))
 
 
 app = Flask(__name__)
@@ -22,6 +25,8 @@ app = Flask(__name__)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE_DIR, '.', 'data', 'cleaned_sleep_data.csv')
 MODEL_PATH = os.path.join(BASE_DIR, '.', 'models', 'lgbm_sleep_model.pkl')
+
+
 
 df = pd.read_csv(CSV_PATH)
 model = joblib.load(MODEL_PATH)
@@ -232,8 +237,7 @@ def sleep_doc_groq_feedback(user_input, sleep_quality_score):
         }
     ]
 
-    api_key = "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"
-    client = Groq(api_key=api_key)
+    client = GROQ_CLIENT
 
     try:
         response = client.chat.completions.create(
