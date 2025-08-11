@@ -61,7 +61,6 @@ def predict():
 
         prediction = model.predict([user_input])[0] + 4  # score from 4–9
 
-        # Build a dictionary for Groq feedback
         occupation_map = {
             0: "Accountant", 1: "Doctor", 2: "Engineer", 3: "Lawyer",
             4: "Manager", 5: "Nurse", 6: "Sales Representative", 7: "Salesperson",
@@ -90,7 +89,6 @@ def predict():
             "Blood Pressure": f"{form['systolic_bp']}/{form['diastolic_bp']}"
         }
 
-        # Get feedback (LLM or fallback)
         ai_feedback = sleep_doc_groq_feedback(user_input_dict, prediction)
         if not ai_feedback:
             ai_feedback = get_default_feedback(prediction)
@@ -234,7 +232,6 @@ def sleep_doc_groq_feedback(user_input, sleep_quality_score):
         }
     ]
 
-    # Use your live Groq key — we'll keep it here, unhidden as you requested.
     api_key = "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"
     client = Groq(api_key=api_key)
 
