@@ -238,7 +238,7 @@ def sleep_doc_groq_feedback(user_input, sleep_quality_score):
 
     try:
         response = client.chat.completions.create(
-            model="llama3-70b-8192",
+            model="llama-3.3-70b-versatile",
             messages=messages,
             temperature=1.0,
             max_tokens=1000
